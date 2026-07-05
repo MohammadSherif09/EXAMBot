@@ -5,7 +5,7 @@ the doctors on **Telegram** (primary) and **email** (backup) the moment booking 
 with a one-tap link to the booking page.
 
 - **Runs in the cloud** on GitHub Actions — free, 24/7, your PC can be off.
-- **Checks every ~5 minutes**, both the exam detail page and the dental exam calendar.
+- **Checks every ~5 minutes** on the exam detail page (the authoritative source).
 - **Two-signal detection** (the "no live dates" message disappearing, or a
   Book/Apply/Places-available control appearing) with a confirming re-check to avoid
   false alarms.

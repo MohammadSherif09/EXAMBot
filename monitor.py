@@ -2,9 +2,9 @@
 """
 MOrth Part B booking watcher.
 
-Checks the RCSEd Membership in Orthodontics (MOrth) Part B exam page (and the
-exam calendar) and, the moment booking looks open, alerts the doctors on
-Telegram (primary) and by email (backup) with a one-tap booking link.
+Checks the RCSEd Membership in Orthodontics (MOrth) Part B exam page and, the
+moment booking looks open, alerts the doctors on Telegram (primary) and by
+email (backup) with a one-tap booking link.
 
 Runs on GitHub Actions every ~5 minutes. All secrets come from environment
 variables (set as GitHub Secrets) so nothing sensitive lives in the code.
@@ -30,7 +30,6 @@ from playwright.sync_api import sync_playwright
 # ---------------------------------------------------------------------------
 
 EXAM_URL = "https://services.rcsed.ac.uk/exams/exam-details-membership-in-orthodontics-part-b"
-CALENDAR_URL = "https://services.rcsed.ac.uk/exams/rcsed-exams?examGroup=dental"
 
 # The sentence that means the exam is CLOSED. While this is on the page, no booking.
 CLOSED_MARKER = "there are currently no live dates for this exam"
@@ -151,24 +150,23 @@ def read_page(page, url: str) -> str:
 
 
 def check_once(page) -> tuple[bool, str]:
-    """Check the exam page (and calendar as backup). Return (is_open, reason)."""
+    """Check the exam detail page. Return (is_open, reason).
+
+    Detection relies solely on the exam detail page, which is the authoritative
+    source: while booking is closed it shows CLOSED_MARKER ("no live dates");
+    when booking opens that sentence disappears and/or a booking control from
+    OPEN_KEYWORDS appears.
+
+    The dental calendar page is deliberately NOT used as a signal. It only lists
+    exam *names* with "View more" links and carries no per-exam booking status,
+    yet it always contains the static heading "Search and Book Dental Exams" —
+    so keyword-matching it produced a guaranteed false positive ("found 'book'")
+    even while MOrth Part B was in fact closed, which would fire a bogus alert on
+    the first run and then latch quiet, missing the real opening.
+    """
     text = read_page(page, EXAM_URL)
     is_open, reason = looks_open(text)
-    if is_open:
-        return True, f"exam page: {reason}"
-
-    # Secondary signal: sometimes a date shows on the calendar first.
-    try:
-        cal = read_page(page, CALENDAR_URL)
-        if "orthodontics" in cal.lower() and "part b" in cal.lower():
-            block = cal.lower()
-            for kw in ("book", "places available", "apply"):
-                if kw in block:
-                    return True, f"calendar page: found '{kw}' near MOrth Part B"
-    except Exception as e:  # noqa: BLE001
-        print(f"[calendar] check skipped: {e}")
-
-    return False, reason
+    return (True, f"exam page: {reason}") if is_open else (False, reason)
 
 
 # ---------------------------------------------------------------------------
