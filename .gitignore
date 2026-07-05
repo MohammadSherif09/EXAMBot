@@ -1,0 +1,15 @@
+# Local secrets — never commit these
+.env
+*.local
+
+# Claude Code local config (can contain approved commands / tokens)
+.claude/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Playwright
+.playwright/
