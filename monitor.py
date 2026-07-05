@@ -54,8 +54,13 @@ TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
 EMAIL_SENDER = os.environ.get("EMAIL_SENDER", "").strip()
 EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD", "").strip()
 EMAIL_RECIPIENTS = os.environ.get("EMAIL_RECIPIENTS", "").strip()  # comma-separated
-SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com").strip()
-SMTP_PORT = int(os.environ.get("SMTP_PORT", "465"))
+# NB: in CI, an *unset* GitHub Secret is still passed as an empty string (not
+# absent), so `.get(name, default)` returns "" and the default never applies.
+# Fall back explicitly on empty/invalid values so the module can't crash at
+# import time when the optional email secrets aren't configured.
+SMTP_HOST = os.environ.get("SMTP_HOST", "").strip() or "smtp.gmail.com"
+_smtp_port_raw = os.environ.get("SMTP_PORT", "").strip()
+SMTP_PORT = int(_smtp_port_raw) if _smtp_port_raw.isdigit() else 465
 
 # Anti-spam flag: once we alert, we stop until this file is removed (--reset).
 FLAG_FILE = Path("state") / "alerted.flag"
