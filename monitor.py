@@ -138,9 +138,14 @@ def looks_open(page_text: str) -> tuple[bool, str]:
     for kw in OPEN_KEYWORDS:
         if kw in low:
             return True, f"found keyword '{kw}'"
-    # Closed marker gone and page is substantial -> treat as possibly open.
+    # Closed marker gone. Only treat that as "open" if we're actually looking at
+    # the MOrth Part B exam page with real content -- this guards against a 404 /
+    # maintenance / redirect page that merely happens to lack the marker.
+    on_exam_page = "orthodontic" in low and "part b" in low
+    if not on_exam_page:
+        return False, "page doesn't look like the MOrth Part B exam page (ignoring)"
     if len(low) > 500:
-        return True, "'no live dates' message has disappeared"
+        return True, "'no live dates' message has disappeared from the exam page"
     return False, "inconclusive (page too short)"
 
 
